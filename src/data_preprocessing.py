@@ -2,63 +2,69 @@ import os
 import pandas as pd
 import numpy as np
 
-# -----------------------------
-# Path setup
-# -----------------------------
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
 
-ratings = pd.read_csv(os.path.join(DATA_DIR, "ratings.csv"))
-movies = pd.read_csv(os.path.join(DATA_DIR, "movies.csv"))
+def load_data(data_dir):
+    ratings = pd.read_csv(os.path.join(data_dir, "ratings.csv"))
+    movies = pd.read_csv(os.path.join(data_dir, "movies.csv"))
+    return ratings, movies
 
-print("Original ratings shape:", ratings.shape)
+def clean_data(ratings, movies):
+    ratings = ratings.dropna().drop_duplicates()
+    movies = movies.dropna().drop_duplicates()
+    return ratings, movies
 
-# -----------------------------
-# Cleaning
-# -----------------------------
-ratings.dropna(inplace=True)
-ratings.drop_duplicates(inplace=True)
-movies.dropna(inplace=True)
-movies.drop_duplicates(inplace=True)
+def filter_data(ratings, min_user_ratings=50, min_movie_ratings=100):
+    user_counts = ratings["userId"].value_counts()
+    movie_counts = ratings["movieId"].value_counts()
 
-# -----------------------------
-# FILTER: Active users & popular movies
-# -----------------------------
-user_counts = ratings["userId"].value_counts()
-movie_counts = ratings["movieId"].value_counts()
+    active_users = user_counts[user_counts >= min_user_ratings].index
+    popular_movies = movie_counts[movie_counts >= min_movie_ratings].index
 
-active_users = user_counts[user_counts >= 50].index
-popular_movies = movie_counts[movie_counts >= 100].index
+    filtered_ratings = ratings[
+        ratings["userId"].isin(active_users) &
+        ratings["movieId"].isin(popular_movies)
+    ]
 
-ratings_filtered = ratings[
-    ratings["userId"].isin(active_users) &
-    ratings["movieId"].isin(popular_movies)
-]
+    return filtered_ratings
 
-print("Filtered ratings shape:", ratings_filtered.shape)
 
-# -----------------------------
-# OPTIONAL: Further sampling (safe)
-# -----------------------------
-ratings_filtered = ratings_filtered.sample(n=500_000, random_state=42)
 
-# -----------------------------
-# Content-based prep
-# -----------------------------
-movies["genres"] = movies["genres"].str.replace("|", " ", regex=False)
+def preprocess_movies(movies):
+    movies["genres"] = movies["genres"].str.replace("|", " ", regex=False)
+    return movies
 
-# -----------------------------
-# Save cleaned data (NO matrix yet)
-# -----------------------------
-ratings_filtered.to_csv(
-    os.path.join(DATA_DIR, "ratings_cleaned.csv"),
-    index=False
-)
 
-movies.to_csv(
-    os.path.join(DATA_DIR, "movies_cleaned.csv"),
-    index=False
-)
 
-print("Preprocessing completed successfully!")
+def save_data(ratings, movies, data_dir):
+    ratings.to_csv(os.path.join(data_dir, "ratings_cleaned.csv"), index=False)
+    movies.to_csv(os.path.join(data_dir, "movies_cleaned.csv"), index=False)
 
+
+if __name__ == "__main__":
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+
+    print("Loading datasets...")
+    ratings, movies = load_data(DATA_DIR)
+
+    print("Original ratings shape:", ratings.shape)
+    print("Original movies shape:", movies.shape)
+
+    print("\nCleaning data...")
+    ratings, movies = clean_data(ratings, movies)
+
+    print("Filtering ratings...")
+    ratings = filter_data(ratings)
+
+    ratings = ratings.sample(n=500_000, random_state=42)
+
+    print("Filtered ratings shape:", ratings.shape)
+
+    print("Preprocessing movie content...")
+    movies = preprocess_movies(movies)
+
+    print("Saving cleaned datasets...")
+    save_data(ratings, movies, DATA_DIR)
+
+    print("\nData preprocessing completed successfully!")
