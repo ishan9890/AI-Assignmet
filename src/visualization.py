@@ -5,16 +5,13 @@ import matplotlib.patches as mpatches
 import numpy as np
 
 
-# ==============================
-# 1. PREDICTED VS ACTUAL
-# ==============================
+
 def plot_predicted_vs_actual(actual, predicted):
     fig, ax = plt.subplots(figsize=(7, 6))
 
     ax.scatter(actual, predicted, alpha=0.5, color="#2E75B6", edgecolors="white",
                linewidth=0.5, s=60, label="Predictions")
 
-    # Perfect prediction line
     min_val = min(min(actual), min(predicted))
     max_val = max(max(actual), max(predicted))
     ax.plot([min_val, max_val], [min_val, max_val], "r--", linewidth=1.5, label="Perfect Prediction")
@@ -29,11 +26,9 @@ def plot_predicted_vs_actual(actual, predicted):
     plt.show()
 
 
-# ==============================
-# 2. MODEL COMPARISON
-# ==============================
+
 def plot_model_comparison():
-    # ✅ Updated with REAL evaluation.py output values
+    
     results = {
         "Collaborative RMSE": 3.5669,
         "Collaborative MAE":  3.4172,
@@ -57,7 +52,6 @@ def plot_model_comparison():
     bars2 = ax.bar(x + width / 2, mae_vals,  width, label="MAE",
                    color="#2E75B6", alpha=0.88, edgecolor="white", linewidth=0.8)
 
-    # Value labels on bars
     for bar in bars1:
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.05,
                 f"{bar.get_height():.4f}", ha="center", va="bottom", fontsize=9, fontweight="bold")
@@ -81,9 +75,6 @@ def plot_model_comparison():
     plt.show()
 
 
-# ==============================
-# 3. RATING DISTRIBUTION
-# ==============================
 def plot_rating_distribution(data_dir):
     ratings = pd.read_csv(os.path.join(data_dir, "ratings_cleaned.csv"))
 
@@ -94,7 +85,6 @@ def plot_rating_distribution(data_dir):
                   width=0.35, color="#2E75B6", alpha=0.85,
                   edgecolor="white", linewidth=0.8)
 
-    # Value labels
     for bar in bars:
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 50,
                 f"{int(bar.get_height()):,}", ha="center", va="bottom", fontsize=8)
@@ -107,7 +97,7 @@ def plot_rating_distribution(data_dir):
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    # Summary stats annotation
+
     mean_r = ratings["rating"].mean()
     median_r = ratings["rating"].median()
     ax.axvline(mean_r, color="red", linestyle="--", linewidth=1.2, label=f"Mean: {mean_r:.2f}")
@@ -119,9 +109,6 @@ def plot_rating_distribution(data_dir):
     plt.show()
 
 
-# ==============================
-# 4. TOP 10 HIGHEST RATED MOVIES
-# ==============================
 def plot_top_movies(data_dir):
     ratings = pd.read_csv(os.path.join(data_dir, "ratings_cleaned.csv"))
     movies  = pd.read_csv(os.path.join(data_dir, "movies_cleaned.csv"))
@@ -141,7 +128,7 @@ def plot_top_movies(data_dir):
 
     top_movies = top_movies.merge(movies[["movieId", "title"]], on="movieId")
 
-    # Shorten long titles
+
     top_movies["short_title"] = top_movies["title"].apply(
         lambda t: t[:40] + "..." if len(t) > 40 else t
     )
@@ -170,9 +157,6 @@ def plot_top_movies(data_dir):
     plt.show()
 
 
-# ==============================
-# 5. RATINGS PER USER DISTRIBUTION
-# ==============================
 def plot_ratings_per_user(data_dir):
     ratings = pd.read_csv(os.path.join(data_dir, "ratings_cleaned.csv"))
 
@@ -199,9 +183,6 @@ def plot_ratings_per_user(data_dir):
     plt.show()
 
 
-# ==============================
-# 6. RATINGS PER MOVIE DISTRIBUTION
-# ==============================
 def plot_ratings_per_movie(data_dir):
     ratings = pd.read_csv(os.path.join(data_dir, "ratings_cleaned.csv"))
 
@@ -228,13 +209,10 @@ def plot_ratings_per_movie(data_dir):
     plt.show()
 
 
-# ==============================
-# 7. GENRE DISTRIBUTION
-# ==============================
 def plot_genre_distribution(data_dir):
     movies = pd.read_csv(os.path.join(data_dir, "movies_cleaned.csv"))
 
-    # Explode pipe-separated genres
+
     genre_series = movies["genres"].dropna().str.split("|").explode()
     genre_counts  = genre_series.value_counts().head(15)
 
@@ -258,10 +236,6 @@ def plot_genre_distribution(data_dir):
     plt.savefig("genre_distribution.png", dpi=150, bbox_inches="tight")
     plt.show()
 
-
-# ==============================
-# MAIN EXECUTION
-# ==============================
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_DIR = os.path.join(BASE_DIR, "data")
